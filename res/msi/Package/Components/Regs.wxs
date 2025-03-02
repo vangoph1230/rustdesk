@@ -47,6 +47,52 @@
 					<RegistryValue Type="string" Name="share_rdp" Value="" />
 
 					<!--$ArpStart$-->
+					<!--https://learn.microsoft.com/en-us/windows/win32/msi/property-reference-->
+					<RegistryValue Type="string" Name="DisplayName" Value="RustDesk" />
+					<RegistryValue Type="string" Name="DisplayIcon" Value="[INSTALLFOLDER_INNER]RustDesk.exe" />
+					<RegistryValue Type="string" Name="DisplayVersion" Value="1.3.9.29015690" />
+					<RegistryValue Type="string" Name="Publisher" Value="PURSLANE" />
+					<RegistryValue Type="string" Name="InstallDate" Value="20250303" />
+					<RegistryValue Type="string" Name="InstallLocation" Value="[INSTALLFOLDER_INNER]" />
+					<RegistryValue Type="string" Name="InstallSource" Value="[InstallSource]" />
+					<RegistryValue Type="integer" Name="Language" Value="[ProductLanguage]" />
+					<RegistryValue Type="integer" Name="EstimatedSize" Value="65940353" />
+					<RegistryValue Type="expandable" Name="ModifyPath" Value="MsiExec.exe /X [ProductCode]" />
+					<RegistryValue Type="integer" Id="NoModify" Value="1" />
+					<RegistryValue Type="expandable" Name="UninstallString" Value="MsiExec.exe /X [ProductCode]" />
+					<RegistryValue Type="expandable" Name="QuietUninstallString" Value="MsiExec.exe /qn /X [ProductCode]" />
+					<RegistryValue Type="string" Name="Version" Value="1.3.9.29015690" />
+					<RegistryValue Type="integer" Name="VersionMajor" Value="1" />
+					<RegistryValue Type="integer" Name="VersionMinor" Value="3" />
+					<RegistryValue Type="integer" Name="VersionBuild" Value="9" />
+					<RegistryValue Type="integer" Name="WindowsInstaller" Value="1" />
+					<RegistryValue Type="string" Name="Comments" Value="!(loc.AR_Comment)" />
+					<RegistryValue Type="string" Name="Contact" Value="https://github.com/rustdesk/rustdesk" />
+					<RegistryValue Type="string" Name="HelpLink" Value="https://github.com/rustdesk/rustdesk/issues/" />
+					<RegistryValue Type="string" Name="ReadMe" Value="https://github.com/rustdesk/rustdesk" />
+					<!--https://learn.microsoft.com/en-us/windows/win32/msi/property-reference-->
+					<RegistryValue Type="string" Name="DisplayName" Value="RustDesk" />
+					<RegistryValue Type="string" Name="DisplayIcon" Value="[INSTALLFOLDER_INNER]RustDesk.exe" />
+					<RegistryValue Type="string" Name="DisplayVersion" Value="1.3.9.29015683" />
+					<RegistryValue Type="string" Name="Publisher" Value="PURSLANE" />
+					<RegistryValue Type="string" Name="InstallDate" Value="20250303" />
+					<RegistryValue Type="string" Name="InstallLocation" Value="[INSTALLFOLDER_INNER]" />
+					<RegistryValue Type="string" Name="InstallSource" Value="[InstallSource]" />
+					<RegistryValue Type="integer" Name="Language" Value="[ProductLanguage]" />
+					<RegistryValue Type="integer" Name="EstimatedSize" Value="65940353" />
+					<RegistryValue Type="expandable" Name="ModifyPath" Value="MsiExec.exe /X [ProductCode]" />
+					<RegistryValue Type="integer" Id="NoModify" Value="1" />
+					<RegistryValue Type="expandable" Name="UninstallString" Value="MsiExec.exe /X [ProductCode]" />
+					<RegistryValue Type="expandable" Name="QuietUninstallString" Value="MsiExec.exe /qn /X [ProductCode]" />
+					<RegistryValue Type="string" Name="Version" Value="1.3.9.29015683" />
+					<RegistryValue Type="integer" Name="VersionMajor" Value="1" />
+					<RegistryValue Type="integer" Name="VersionMinor" Value="3" />
+					<RegistryValue Type="integer" Name="VersionBuild" Value="9" />
+					<RegistryValue Type="integer" Name="WindowsInstaller" Value="1" />
+					<RegistryValue Type="string" Name="Comments" Value="!(loc.AR_Comment)" />
+					<RegistryValue Type="string" Name="Contact" Value="https://github.com/rustdesk/rustdesk" />
+					<RegistryValue Type="string" Name="HelpLink" Value="https://github.com/rustdesk/rustdesk/issues/" />
+					<RegistryValue Type="string" Name="ReadMe" Value="https://github.com/rustdesk/rustdesk" />
 					<!--$ArpEnd$-->
 				</RegistryKey>
 			</Component>

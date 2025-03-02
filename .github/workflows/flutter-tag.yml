@@ -1,8 +1,15 @@
 name: Flutter Tag Build
 
 on:
+  # 在推送特定格式的标签时触发 Flutter 项目的构建
   workflow_dispatch:
   push:
+    # 当推送特定格式的标签时触发工作流
+    # tags: 匹配以下格式的标签：
+    #     vX.Y.Z（例如 v1.2.3）
+    #      X.Y.Z（例如 1.2.3）
+    #   vX.Y.Z-A（例如 v1.2.3-4）
+    #    X.Y.Z-A（例如 1.2.3-4）
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - '[0-9]+.[0-9]+.[0-9]+'
@@ -15,4 +22,5 @@ jobs:
     secrets: inherit
     with:
       upload-artifact: true
+      # 使用触发工作流的标签名称作为上传的标签
       upload-tag: ${{ github.ref_name }}

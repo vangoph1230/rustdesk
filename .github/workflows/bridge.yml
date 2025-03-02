@@ -6,9 +6,13 @@ on:
   workflow_call:
 
 env:
+  # cargo-expand 是一个 Rust 工具，用于展开宏代码。它可以帮助开发者查看宏展开后的实际代码，便于调试和理解宏的行为。
   CARGO_EXPAND_VERSION: "1.0.95"
   FLUTTER_VERSION: "3.22.3"
+  # flutter_rust_bridge 是一个用于在 Flutter 和 Rust 之间建立桥接的工具。
+  # 它允许 Flutter 应用调用 Rust 代码，从而利用 Rust 的高性能和安全性
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
+  # 1.75 是一个经过测试的稳定版本
   RUST_VERSION: "1.75" # https://github.com/rustdesk/rustdesk/discussions/7503
 
 jobs:
@@ -19,16 +23,20 @@ jobs:
       matrix:
         job:
           - {
+              # 目标平台为 Linux（x86_64 架构）
               target: x86_64-unknown-linux-gnu,
               os: ubuntu-20.04,
+              # 额外的构建参数（这里为空）
               extra-build-args: "",
             }
     steps:
+        # 步骤 1：检出代码
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
+        # 步骤 2：安装依赖
       - name: Install prerequisites
         run: |
           sudo apt-get install ca-certificates -y
@@ -48,17 +56,23 @@ jobs:
             pkg-config \
             wget
 
+        # 步骤 3：安装 Rust 工具链
       - name: Install Rust toolchain
+        # 使用第三方 Action 安装 Rust
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.job.target }}
+          # 安装额外的 Rust 组件
           components: "rustfmt"
 
+        # 步骤 4：缓存 Rust 构建
       - uses: Swatinem/rust-cache@v2
         with:
           prefix-key: bridge-${{ matrix.job.os }}
 
+        # 步骤 5：缓存 Bridge 生成结果
+        # 缓存 flutter_rust_bridge 的生成结果
       - name: Cache Bridge
         id: cache-bridge
         uses: actions/cache@v3
@@ -66,29 +80,38 @@ jobs:
           path: /tmp/flutter_rust_bridge
           key: vcpkg-${{ matrix.job.arch }}
 
+        # 步骤 6：安装 Flutter 
       - name: Install flutter
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          # 启用缓存，加速后续构建
           cache: true
 
+        # 步骤 7：安装 Flutter-Rust 桥接工具
       - name: Install flutter rust bridge deps
         shell: bash
+        # pushd flutter 进入 flutter 目录
+        # popd 返回到之前的目录
         run: |
           cargo install cargo-expand --version ${{ env.CARGO_EXPAND_VERSION }} --locked
           cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid" --locked
           pushd flutter && sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml && flutter pub get && popd
 
+        # 步骤 8：生成桥接代码
       - name: Run flutter rust bridge
+        # --rust-input：指定 Rust 输入文件;--dart-output：指定 Dart 输出文件;--c-output：指定 C 头文件输出路径
         run: |
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
           cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
 
+        # 步骤 9：上传生成的文件,将生成的文件打包并上传为构建产物
       - name: Upload Artifact
         uses: actions/upload-artifact@master
         with:
           name: bridge-artifact
+          # path：指定需要上传的文件路径
           path: |
             ./src/bridge_generated.rs
             ./src/bridge_generated.io.rs

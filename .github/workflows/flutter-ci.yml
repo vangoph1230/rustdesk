@@ -1,11 +1,15 @@
 name: Full Flutter CI
 
 on:
+  # 允许手动触发工作流
   workflow_dispatch:
+  # 当有 Pull Request 时触发工作流
   pull_request:
+    # 指定了哪些文件或目录的更改不会触发工作流
     paths-ignore:
     - "docs/**"
     - "README.md"
+  # 当代码被推送到 master 分支时触发工作流
   push:
     branches:
       - master
@@ -21,4 +25,5 @@ jobs:
   run-ci:
     uses: ./.github/workflows/flutter-build.yml
     with:
+      # 是否将构建生成的产物（如 APK、IPA 等）上传到 GitHub Actions 的 artifacts 中
       upload-artifact: false

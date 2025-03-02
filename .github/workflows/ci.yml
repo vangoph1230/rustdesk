@@ -208,9 +208,12 @@ jobs:
     #     echo ::set-output name=BIN_PATH::${BIN_PATH}
     #     echo ::set-output name=BIN_NAME::${BIN_NAME}
 
+      # 用于根据不同的目标平台设置测试选项，并随后运行测试
     - name: Set testing options
+      # 步骤的唯一标识符
       id: test-options
       shell: bash
+      # 清除可能存在的环境变量CARGO_TEST_OPTIONS，并设置其
       run: |
         # test only library unit tests and binary for arm-type targets
         unset CARGO_TEST_OPTIONS
@@ -229,8 +232,12 @@ jobs:
         echo "CARGO_TEST_OPTIONS=${CARGO_TEST_OPTIONS}" >> $GITHUB_OUTPUT
 
     - name: Run tests
+      # 用于运行 Cargo 命令
       uses: actions-rs/cargo@v1
       with:
+        # 是否使用 cross 工具（用于跨平台编译）
         use-cross: ${{ matrix.job.use-cross }}
+        # 指定 Cargo 命令为 test，表示运行测试
         command: test
+        # --locked: 确保使用 Cargo.lock 文件中的依赖版本
         args: --locked --target=${{ matrix.job.target }} ${{ steps.test-options.outputs.CARGO_TEST_OPTIONS}}

@@ -1,3 +1,5 @@
+# 在编程领域，"Playground" 通常指一个交互式的编程环境，
+# 允许开发者快速测试代码片段，无需搭建完整的开发环境
 name: playground
 
 on:
@@ -243,7 +245,9 @@ jobs:
               arch: aarch64,
               target: aarch64-linux-android,
               os: ubuntu-20.04,
+              #  OpenSSL 的架构名称，这里是 android-arm64
               openssl-arch: android-arm64,
+              # Git 引用，这里是 master，表示使用最新的代码
               ref: master, # latest
             }
     steps:
@@ -343,6 +347,7 @@ jobs:
           # cp -rf /opt/rustdesk_thirdparty_lib/vcpkg/* /opt/artifacts/vcpkg/
           ls -ls /opt/artifacts/vcpkg/installed/arm64-android/lib/
 
+        # 编译lib文件
       - name: Build rustdesk lib
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
@@ -362,7 +367,8 @@ jobs:
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/librustdesk.so
             ;;
           esac
-
+        
+          # 构建项目
       - name: Build rustdesk
         shell: bash
         env:
@@ -394,7 +400,7 @@ jobs:
           popd
           mkdir -p signed-apk; pushd signed-apk
           mv ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk ./rustdesk-test-${{ matrix.job.ref }}-${{ matrix.job.ndk }}.apk
-
+        #签名APK
       - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         if: env.ANDROID_SIGNING_KEY != null
@@ -408,7 +414,8 @@ jobs:
         env:
           # override default build-tools version (29.0.3) -- optional
           BUILD_TOOLS_VERSION: "30.0.2"
-
+        
+        #发布到github
       - name: Publish signed apk package
         uses: softprops/action-gh-release@v1
         with:

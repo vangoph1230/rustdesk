@@ -1,3 +1,5 @@
+# 这段脚本是一个功能强大的构建工具，支持多种平台和构建选项。
+# 它通过调用 Cargo、Flutter 和其他工具链，自动化完成 RustDesk 的构建和打包过程。
 #!/usr/bin/env python3
 
 import os
@@ -11,6 +13,7 @@ import argparse
 import sys
 from pathlib import Path
 
+# 根据操作系统设置构建目录和可执行文件路径
 windows = platform.platform().startswith('Windows')
 osx = platform.platform().startswith(
     'Darwin') or platform.platform().startswith("macOS")
@@ -23,28 +26,32 @@ elif osx:
 else:
     flutter_build_dir = 'build/linux/x64/release/bundle/'
 flutter_build_dir_2 = f'flutter/{flutter_build_dir}'
+# 用于控制是否跳过 Cargo 构建过程
 skip_cargo = False
 
 
+#获取 Debian 包的架构
 def get_deb_arch() -> str:
     custom_arch = os.environ.get("DEB_ARCH")
     if custom_arch is None:
         return "amd64"
     return custom_arch
 
+#
 def get_deb_extra_depends() -> str:
     custom_arch = os.environ.get("DEB_ARCH")
     if custom_arch == "armhf": # for arm32v7 libsciter-gtk.so
         return ", libatomic1"
     return ""
 
+# 执行系统命令，并在失败时退出脚本
 def system2(cmd):
     exit_code = os.system(cmd)
     if exit_code != 0:
         sys.stderr.write(f"Error occurred when executing: `{cmd}`. Exiting.\n")
         sys.exit(-1)
 
-
+#从 Cargo.toml 中读取 RustDesk 的版本号
 def get_version():
     with open("Cargo.toml", encoding="utf-8") as fh:
         for line in fh:
@@ -52,7 +59,7 @@ def get_version():
                 return line.replace("version", "").replace("=", "").replace('"', '').strip()
     return ''
 
-
+# 解析构建特性（如硬件编解码器支持）
 def parse_rc_features(feature):
     available_features = {}
     apply_features = {}
@@ -93,9 +100,12 @@ def parse_rc_features(feature):
     else:
         raise Exception(f'Unsupported features param {feature}')
 
-
+#创建命令行参数解析器
 def make_parser():
     parser = argparse.ArgumentParser(description='Build script.')
+    # 允许用户指定要集成的特性
+    # -f 和 --feature：参数的短选项和长选项。
+    # dest='feature'：将解析后的值存储在 args.feature 中
     parser.add_argument(
         '-f',
         '--feature',
@@ -106,6 +116,8 @@ def make_parser():
         default='',
         help='Integrate features, windows only.'
              'Available: [Not used for now]. Special value is "ALL" and empty "". Default is empty.')
+    # action='store_true'：如果指定了该参数，则 args.flutter 为 True，否则为 False
+    # default=False：默认值为 False
     parser.add_argument('--flutter', action='store_true',
                         help='Build flutter package', default=False)
     parser.add_argument(
@@ -157,6 +169,7 @@ def make_parser():
 #
 # it assumes all build dependencies are installed in environments
 # Note: do not use it in bare metal, or may break build environments
+# 生成用于 Docker 构建的脚本
 def generate_build_script_for_docker():
     with open("/tmp/build.sh", "w") as f:
         f.write('''
@@ -192,6 +205,7 @@ def generate_build_script_for_docker():
 # Downloading third party resources is deprecated.
 # We can use this function in an offline build environment.
 # Even in an online environment, we recommend building third-party resources yourself.
+# 下载并解压构建所需的第三方资源
 def download_extract_features(features, res_dir):
     import re
 
@@ -248,7 +262,7 @@ def download_extract_features(features, res_dir):
                 os.remove(download_filename)
                 print(f'{feat} extract end')
 
-
+# 处理外部资源（如硬件编解码器库）
 def external_resources(flutter, args, res_dir):
     features = parse_rc_features(args.feature)
     if not features:
@@ -270,7 +284,7 @@ def external_resources(flutter, args, res_dir):
             else:
                 shutil.copytree(f, f'{flutter_build_dir_2}{f.stem}')
 
-
+# 根据命令行参数获取构建特性
 def get_features(args):
     features = ['inline'] if not args.flutter else []
     if args.hwcodec:
@@ -287,7 +301,7 @@ def get_features(args):
     print("features:", features)
     return features
 
-
+# 生成 Debian 包的 control 文件
 def generate_control_file(version):
     control_file_path = "../res/DEBIAN/control"
     system2('/bin/rm -rf %s' % control_file_path)
@@ -308,13 +322,13 @@ Description: A remote control software.
     file.write(content)
     file.close()
 
-
+# 修复 Flutter FFI 生成的代码
 def ffi_bindgen_function_refactor():
     # workaround ffigen
     system2(
         'sed -i "s/ffi.NativeFunction<ffi.Bool Function(DartPort/ffi.NativeFunction<ffi.Uint8 Function(DartPort/g" flutter/lib/generated_bridge.dart')
 
-
+# 构建 Flutter 版本的 Debian 包
 def build_flutter_deb(version, features):
     if not skip_cargo:
         system2(f'cargo build --features {features} --lib --release')
@@ -363,7 +377,7 @@ def build_flutter_deb(version, features):
     os.rename('rustdesk.deb', '../rustdesk-%s.deb' % version)
     os.chdir("..")
 
-
+# 从指定文件夹构建 Debian 包
 def build_deb_from_folder(version, binary_folder):
     os.chdir('flutter')
     system2('mkdir -p tmpdeb/usr/bin/')
@@ -400,7 +414,7 @@ def build_deb_from_folder(version, binary_folder):
     os.rename('rustdesk.deb', '../rustdesk-%s.deb' % version)
     os.chdir("..")
 
-
+# 构建 Flutter 版本的 macOS .dmg 文件
 def build_flutter_dmg(version, features):
     if not skip_cargo:
         # set minimum osx build target, now is 10.14, which is the same as the flutter xcode project
@@ -419,7 +433,7 @@ def build_flutter_dmg(version, features):
     '''
     os.chdir("..")
 
-
+# 构建 Arch/Manjaro 平台的 Flutter 版本
 def build_flutter_arch_manjaro(version, features):
     if not skip_cargo:
         system2(f'cargo build --features {features} --lib --release')
@@ -430,25 +444,35 @@ def build_flutter_arch_manjaro(version, features):
     os.chdir('../res')
     system2('HBB=`pwd`/.. FLUTTER=1 makepkg -f')
 
-
+# 构建 Flutter 版本的 RustDesk 应用程序，并生成可执行文件和安装包
 def build_flutter_windows(version, features, skip_portable_pack):
     if not skip_cargo:
+        #--lib: 指定构建目标为库（library），动态链接库文件（DLL）而不是可执行文件
         system2(f'cargo build --features {features} --lib --release')
         if not os.path.exists("target/release/librustdesk.dll"):
             print("cargo build failed, please check rust source code.")
             exit(-1)
+    # 切换到 flutter 目录
     os.chdir('flutter')
+    # 调用 Flutter 构建 Windows 平台的 Release 版本
     system2('flutter build windows --release')
+    # 切换回项目根目录
     os.chdir('..')
+    # 将虚拟显示动态库复制到 Flutter 构建目录
+    # flutter_build_dir_2 = 'flutter/build/windows/x64/runner/Release/'
     shutil.copy2('target/release/deps/dylib_virtual_display.dll',
                  flutter_build_dir_2)
+    # 去掉--skip-portable-pack，进行便携式打包
     if skip_portable_pack:
         return
+    # 切换到便携式打包工具的目录
     os.chdir('libs/portable')
     system2('pip3 install -r requirements.txt')
+    # 调用 generate.py 脚本生成便携式安装包
     system2(
         f'python3 ./generate.py -f ../../{flutter_build_dir_2} -o . -e ../../{flutter_build_dir_2}/rustdesk.exe')
     os.chdir('../..')
+    # 检查是否已存在 rustdesk_portable.exe
     if os.path.exists('./rustdesk_portable.exe'):
         os.replace('./target/release/rustdesk-portable-packer.exe',
                    './rustdesk_portable.exe')
@@ -467,11 +491,17 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
+    # 如果存在旧的可执行文件，则删除
     if os.path.exists(exe_path):
+        # 删除exe_path指定的文件
         os.unlink(exe_path)
+    # 通过检查这个路径，可以判断当前操作系统是否是Arch Linux或其衍生版本
     if os.path.isfile('/usr/bin/pacman'):
+        # 执行一个系统命令，使用git checkout恢复src/ui/common.tis文件
         system2('git checkout src/ui/common.tis')
+    # 从 Cargo.toml 中读取 RustDesk 的版本号
     version = get_version()
+    # 调用get_features()函数获取特性列表，并将其拼接成一个以逗号分隔的字符串
     features = ','.join(get_features(args))
     flutter = args.flutter
     if not flutter:
@@ -485,22 +515,31 @@ def main():
         build_deb_from_folder(version, package)
         return
     res_dir = 'resources'
+    # 下载并解压构建所需的第三方资源（如硬件编解码器库）
     external_resources(flutter, args, res_dir)
     if windows:
         # build virtual display dynamic library
+        #一种软件模拟的显示设备，它并不对应实际的物理显示器，但可以被操作系统和应用程序识别为一个真实的显示器
+        # 构建虚拟显示动态库，用于支持 Windows 平台的虚拟显示功能
+        # 切换到虚拟显示库的目录
         os.chdir('libs/virtual_display/dylib')
+        # 使用 Cargo 构建虚拟显示库，生成dylib_virtual_display.dll
         system2('cargo build --release')
+        # 切换回项目根目录
         os.chdir('../../..')
 
         if flutter:
             build_flutter_windows(version, features, args.skip_portable_pack)
             return
+        # 调用 Cargo 构建 RustDesk，启用指定的特性（如硬件编解码器支持）
         system2('cargo build --release --features ' + features)
         # system2('upx.exe target/release/rustdesk.exe')
         system2('mv target/release/rustdesk.exe target/release/RustDesk.exe')
+        # 从环境变量中获取签名密码
         pa = os.environ.get('P')
         if pa:
             # https://certera.com/kb/tutorial-guide-for-safenet-authentication-client-for-code-signing/
+            # 使用 signtool 对 rustdesk.exe 进行签名
             system2(
                 f'signtool sign /a /v /p {pa} /debug /f .\\cert.pfx /t http://timestamp.digicert.com  '
                 'target\\release\\rustdesk.exe')
@@ -508,6 +547,7 @@ def main():
             print('Not signed')
         system2(
             f'cp -rf target/release/RustDesk.exe {res_dir}')
+        # 生成便携式安装包
         os.chdir('libs/portable')
         system2('pip3 install -r requirements.txt')
         system2(
@@ -630,11 +670,12 @@ def main():
                 system2('dpkg-deb -b tmpdeb rustdesk.deb; /bin/rm -rf tmpdeb/')
                 os.rename('rustdesk.deb', 'rustdesk-%s.deb' % version)
 
-
+# 计算文件的 MD5 哈希值
 def md5_file(fn):
     md5 = hashlib.md5(open('tmpdeb/' + fn, 'rb').read()).hexdigest()
     system2('echo "%s  /%s" >> tmpdeb/DEBIAN/md5sums' % (md5, fn))
 
+# 用于 Debian 包的 md5sums 文件
 def md5_file_folder(base_dir):
     base_path = Path(base_dir)
     for file in base_path.rglob('*'):

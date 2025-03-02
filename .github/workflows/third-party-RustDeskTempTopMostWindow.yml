@@ -28,6 +28,10 @@ on:
             default: 'Windows10'
 
 env:
+  # 该文件用于构建一个名为 WindowInjection 的项目
+  # .vcxproj 是一个 Visual Studio 项目文件，通常用于 C++ 项目
+  # RustDeskTempTopMostWindow ：Win10 隐私保护窗口的临时解决方案。
+  # 隐私保护窗口是一个除任务栏和开始菜单外覆盖所有其他窗口的窗口
   project_path: WindowInjection/WindowInjection.vcxproj
 
 jobs:
@@ -38,23 +42,29 @@ jobs:
     env:
       build_output_dir: RustDeskTempTopMostWindow/WindowInjection/${{ inputs.platform }}/${{ inputs.configuration }}
     steps:
+        # MSBuild 是用于构建 Visual Studio 项目的工具
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
       - name: Download the source code
         run: |
           git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
-
-        # Build. commit 53b548a5398624f7149a382000397993542ad796 is tag v0.3
+        
       - name: Build the project
+        # Build. commit 53b548a5398624f7149a382000397993542ad796 is tag v0.3
+        # 检出（切换到）特定的Git提交指定的版本。这一步确保构建是基于特定的代码版本进行的
+        #
+        # 使用MSBuild构建项目
         run: |
           cd RustDeskTempTopMostWindow && git checkout 53b548a5398624f7149a382000397993542ad796
           msbuild ${{ env.project_path }} -p:Configuration=${{ inputs.configuration }} -p:Platform=${{ inputs.platform }} /p:TargetVersion=${{ inputs.target_version }}
 
+        # 归档构建产物，Archive 把...存档/归档
       - name: Archive build artifacts
         uses: actions/upload-artifact@master
         if: ${{ inputs.upload-artifact }}
         with:
             name: topmostwindow-artifacts
+            # 指定要上传的文件路径，这里上传的是构建生成的 WindowInjection.dll 文件
             path: |
               ./${{ env.build_output_dir }}/WindowInjection.dll
