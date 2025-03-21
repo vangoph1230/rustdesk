@@ -1,0 +1,197 @@
+
+------------------------------------------------------------Linux上编译------------------------------------------------------------------------------------------------------
+#步骤 2：安装依赖
+    # 用于安装 CA 证书（Certificate Authority Certificates）,-y：自动回答“是”（yes），避免在安装过程中需要手动确认
+    # 这些证书用于:
+    #             验证 HTTPS 连接：当你访问一个 HTTPS 网站时，系统会使用这些证书来验证网站的身份
+    #             确保安全通信：许多网络服务（如 Git、curl、wget 等）依赖这些证书来建立安全的 TLS/SSL 连接
+    #             支持加密协议：确保系统能够正确处理加密的通信协议（如 TLS/SSL） 
+    # 如果系统缺少 CA 证书，可能会导致以下问题:无法访问 HTTPS 网站;Git、curl、wget 等工具无法正常工作;SSl连接缺少证书错误
+        sudo apt-get install ca-certificates -y
+
+        sudo apt-get update -y
+      
+        sudo apt-get install -y clang cmake curl gcc git g++ libgtk-3-dev nasm ninja-build pkg-config wget
+        sudo apt-get install -y libclang-10-dev llvm-10-dev 
+        
+
+#步骤 3：安装 Rust 工具链
+    # wsl里的Unbuntu-20.04, default host triple(默认主机三元组): x86_64-unknown-linux-gnu
+    # default host triple(默认主机三元组),它用于描述目标系统的架构、厂商、操作系统和二进制格式:<架构>-<厂商>-<操作系统>-<二进制格式>
+    #
+    # 安装rustup,默认stable-x86_64-unknown-linux-gnu installed - rustc 1.85.0 
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    #
+    #
+    # Rustup 生成的环境变量文件路径
+        source $HOME/.cargo/env
+    #
+    # 1.75-x86_64-unknown-linux-gnu installed - rustc 1.75.0
+    # 安装后，从1.85切换到1.75，并设置为默认，并验证版本
+        rustup install 1.75
+        rustup default 1.75
+        rustc +1.75 --version --verbose
+    #
+    # 安装 Rust 工具链的组件命令
+        rustup component add rustfmt
+
+# rustdesk环境依赖：请准备好 Rust 开发环境和 C++ 编译环境、安装 vcpkg, 正确设置 VCPKG_ROOT 环境变量
+        sudo apt install -y g++ gcc git curl wget nasm yasm libgtk-3-dev clang libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev libpulse-dev cmake
+
+       
+
+        sudo apt install -y zip g++ gcc git curl wget nasm yasm libgtk-3-dev clang libxcb-randr0-dev libxdo-dev \
+        libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev libpulse-dev cmake make \
+        libclang-dev ninja-build libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+
+        sudo apt install build-essential cmake nasm
+         ./vcpkg remove libjpeg-turbo:x64-linux
+         ./vcpkg install libjpeg-turbo:x64-linux
+
+        git clone https://github.com/microsoft/vcpkg
+        cd vcpkg
+        git checkout 2023.10.19
+        cd ..
+        vcpkg/bootstrap-vcpkg.sh
+        设置环境变量
+        编辑~/.bashrc 文件，添加如下2行：
+            export VCPKG_ROOT=/home/gophvan/vcpkg
+            export PATH="$VCPKG_ROOT:$PATH"
+        保存文件后，执行：
+            source ~/.bashrc
+        vcpkg --version
+        vcpkg/vcpkg install libvpx libyuv opus aom
+        
+        sudo apt update
+        sudo apt install libpam0g-dev 
+        ls /usr/include/security/pam_appl.h
+
+
+        cd rustdesk
+        wget https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so
+        mv libsciter-gtk.so target/debug
+        VCPKG_ROOT=$HOME/vcpkg
+        cargo run
+
+#步骤 6：安装 Flutter  env.FLUTTER_VERSION=  "3.24.5"  ,channel: "stable"
+    # curl 用于从网络下载或上传数据
+    # git  一个分布式版本控制系统，用于管理代码和项目
+    # xz-utils  提供对 .xz 压缩文件的支持，包括 xz 和 unxz 工具
+    # libglu1-mesa 提供 OpenGL Utility Library（GLU）的实现，通常用于图形渲染
+
+        #安装环境及配置
+        sudo apt-get update -y && sudo apt-get upgrade -y;
+        sudo apt-get install -y curl git unzip xz-utils zip libglu1-mesa
+    
+        sudo apt-get install clang cmake git ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+        # libstdc++-12-dev 变为前一个版本: libstdc++-11-dev
+        sudo apt-get install libstdc++-11-dev
+
+        #安装flutter
+        根据官方文档安装及配置
+        设置环境变量：
+            编辑~/.bashrc 文件，添加如下2行：
+            export  PATH="$PATH:/home/gophvan/development/flutter/bin/cache/dart-sdk/bin"
+            export PATH="$PATH:/home/gophvan/development/flutter/bin"
+            . "$HOME/.cargo/env"
+        保存文件后，执行：
+            source ~/.bashrc
+         
+
+# 步骤 7：# 步骤 7：安装 Flutter-Rust 桥接工具 CARGO_EXPAND_VERSION="1.0.95" FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
+        cd rustdesk  根据lock文件安装cargo-extend
+        cargo install cargo-expand --version 1.0.95 --locked
+        #cargo uninstall cargo-expand 卸载命令
+        #验证
+        cargo-expand --version
+
+        根据lock文件安装 Flutter-Rust 桥接工具
+        cargo install flutter_rust_bridge_codegen --version 1.80.1 --features "uuid" --locked
+        #cargo uninstall flutter_rust_bridge_codegen 卸载命令
+        
+        cd restdesk/flutter,//手动将pubspec.yaml文件中extended_text的值从14.0.0改到13.0.0
+        sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
+        
+        
+
+
+# 步骤 8：生成桥接代码  --rust-input：指定 Rust 输入文件;--dart-output：指定 Dart 输出文件;--c-output：指定 C 头文件输出路径
+        export PATH="$PATH:/home/gophvan/development/flutter/bin/cache/dart-sdk/bin"
+        ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+        cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
+
+
+
+---------------------------------------------------------Windows上编译---------------------------------------------------------------------------------------------------
+# MSBuild 是用于构建 Visual Studio 项目的工具
+    
+    安装好后需要设置环境变量路径
+
+    使用MSBuild构建项目
+    #                   #项目的路径#                        #设置构建配置#        #设置目标平台#       #设置目标版本#
+    msbuild WindowInjection/WindowInjection.vcxproj -p:Configuration=Release -p:Platform=x64 /p:TargetVersion=Windows10
+    cp ./RustDeskTempTopMostWindow/WindowInjection/x64/Release/WindowInjection.dll RustDeskTempTopMostWindow/WindowInjection/x64/Release
+
+    #使用VS code 安装flutter,不要手动安装  FLUTTER_VERSION: "3.24.5"
+     出现错误：Could not find a command named frontend_server.dart.snapshot 时，删除 pubspec.lock文件即可
+
+    # 5:android SDK配置
+        cd cmdline-tools\latest\bin
+        .\sdkmanager --install "cmdline-tools;latest"
+        flutter config --android-sdk D:\ProgramFiles\android_sdk\
+        flutter doctor --android-licenses
+
+    # 6：替换 Flutter 默认引擎为 RustDesk 自定义引擎 ，用来修复多窗口奔溃
+        flutter doctor -v
+        flutter precache --windows
+        mkdir customflutterengine && cd customflutterengine
+        Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
+        Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
+    
+    # 支持硬件编解码
+        下载并安装最新的 NVIDIA 驱动程序
+        安装 CUDA 工具包
+        nvidia-smi 命令验证 NVIDIA 驱动是否正确安装
+
+    # 编译rustdesk
+        mmkdir usbmidd_v2 && cd usbmidd_v2
+        Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
+        Expand-Archive usbmmidd_v2.zip -DestinationPath .
+        Remove-Item -Path usbmmidd_v2\Win32 -Recurse
+        Remove-Item -Path "usbmmidd_v2\deviceinstaller64.exe", "usbmmidd_v2\deviceinstaller.exe", "usbmmidd_v2\usbmmidd.bat"
+
+        ./vcpkg install ffmpeg:x64-windows-static
+        复制一个python.exe命名为python3.exe
+        （分解这条命令行（原命令）：python3 .\build.py --portable --hwcodec --flutter --vram --skip-portable-pack）
+           ---该删减后的命令可以正确执行:python3 .\build.py --portable --flutter --skip-portable-pack
+                mv ./flutter/build/windows/x64/runner/Release ./rustdesk
+                mv -Force .\usbmmidd_v2 ./rustdesk
+                cp ./flutter/build/windows/x64/runner/rustdesk.dir/Release/Runner.res ./libs/portable/Runner.res
+                ls -l ./libs/portable/Runner.res
+                请安装 Visual Studio 2019 生成工具
+                git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
+                msbuild WindowInjection/WindowInjection.vcxproj -p:Configuration=Release -p:Platform=x64 /p:TargetVersion=Windows10
+                mv RustDeskTempTopMostWindow/WindowInjection/x64/Release/WindowInjection.dll .\rustdesk\rustdesk\WindowInjection.dll
+
+    #对 RustDesk 文件进行签名
+        UPLOAD_ARTIFACT: true && SIGN_BASE_URL: "" ,要求SIGN_BASE_URL不为空才执行签名。故该段不执行签名
+
+    ## 生成自解压可执行文件
+        sed -i '/dpiAware/d' res/manifest.xml
+        cd ./libs/portable
+        pip3 install -r requirements.txt
+        python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+        cd ../.. (到根目录下)
+        mkdir -p ./SignOutput
+        mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-1.3.9-x86_64.exe
+
+    #构建.msi文件
+        
+               
+
+  
+
+
+
+
+
