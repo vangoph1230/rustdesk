@@ -38,6 +38,7 @@ late List<String> kBootArgs;
 
 Future<void> main(List<String> args) async {
   earlyAssert();
+  //初始化 Flutter 的绑定，确保 Flutter 框架可以正常运行
   WidgetsFlutterBinding.ensureInitialized();
 
   debugPrint("launch args: $args");
@@ -50,13 +51,16 @@ Future<void> main(List<String> args) async {
   // main window
   if (args.isNotEmpty && args.first == 'multi_window') {
     kWindowId = int.parse(args[1]);
+    // 设置当前窗口的 ID
     stateGlobal.setWindowId(kWindowId!);
     if (!isMacOS) {
+      // 不是 macOS，则隐藏窗口的标题栏
       WindowController.fromWindowId(kWindowId!).showTitleBar(false);
     }
     final argument = args[2].isEmpty
         ? <String, dynamic>{}
         : jsonDecode(args[2]) as Map<String, dynamic>;
+    // 获取窗口类型 
     int type = argument['type'] ?? -1;
     // to-do: No need to parse window id ?
     // Because stateGlobal.windowId is a global value.
@@ -64,6 +68,7 @@ Future<void> main(List<String> args) async {
     kWindowType = type.windowType;
     switch (kWindowType) {
       case WindowType.RemoteDesktop:
+        debugPrint("Desktop Remote started");
         desktopType = DesktopType.remote;
         runMultiWindow(
           argument,
@@ -71,6 +76,7 @@ Future<void> main(List<String> args) async {
         );
         break;
       case WindowType.FileTransfer:
+        debugPrint("Desktop FileTransfer started");
         desktopType = DesktopType.fileTransfer;
         runMultiWindow(
           argument,
@@ -78,6 +84,7 @@ Future<void> main(List<String> args) async {
         );
         break;
       case WindowType.ViewCamera:
+        debugPrint("Desktop ViewCamera started");
         desktopType = DesktopType.viewCamera;
         runMultiWindow(
           argument,
@@ -85,6 +92,7 @@ Future<void> main(List<String> args) async {
         );
         break;
       case WindowType.PortForward:
+        debugPrint("Desktop portForward started");
         desktopType = DesktopType.portForward;
         runMultiWindow(
           argument,
@@ -100,10 +108,13 @@ Future<void> main(List<String> args) async {
     await windowManager.ensureInitialized();
     runConnectionManagerScreen();
   } else if (args.contains('--install')) {
+    debugPrint("install started");
     runInstallPage();
   } else {
     desktopType = DesktopType.main;
+    // 启动连接管理器界面
     await windowManager.ensureInitialized();
+    // 设置窗口不可关闭
     windowManager.setPreventClose(true);
     if (isMacOS) {
       disableWindowMovable(kWindowId);
@@ -114,12 +125,17 @@ Future<void> main(List<String> args) async {
 
 Future<void> initEnv(String appType) async {
   // global shared preference
+  //全局共享偏好设置，例如本地存储、配置等
   await platformFFI.init(appType);
   // global FFI, use this **ONLY** for global configuration
   // for convenience, use global FFI on mobile platform
   // focus on multi-ffi on desktop first
+  // 全局外部函数接口（FFI），仅将此用于全局配置
+  // 为了方便在移动平台上使用全局 FFI,首先专注于桌面端的多外部函数接口
+  // 通常用于调用本地代码（例如 C/C++ 库）
   await initGlobalFFI();
   // await Firebase.initializeApp();
+  //注册事件处理器
   _registerEventHandler();
   // Update the system theme.
   updateSystemWindowTheme();
@@ -129,7 +145,7 @@ void runMainApp(bool startService) async {
   // register uni links
   await initEnv(kAppTypeMain);
   checkUpdate();
-  // trigger connection status updater
+  // trigger(触发) connection status updater
   await bind.mainCheckConnectStatus();
   if (startService) {
     gFFI.serverModel.startService();
